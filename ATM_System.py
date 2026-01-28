@@ -1,115 +1,136 @@
-# ==============================
-# PRACTICE ATM SYSTEM
-# ==============================
+class Account:
+    def __init__(self, name, balance):
+        self.name = name
+        self.balance = balance
+        self.transactions = []
 
-# Khởi tạo dữ liệu
-account_name = ""
-balance = 0
-transactions = []
-
-# ---------- Chức năng ----------
-def tao_tai_khoan():
-    global account_name, balance
-    account_name = input("Nhập tên chủ tài khoản: ")
-    while True:
-        try:
-            balance = float(input("Nhập số dư ban đầu: "))
-            if balance < 0:
-                print("❌ Số dư không hợp lệ")
-            else:
-                break
-        except ValueError:
-            print("❌ Vui lòng nhập số")
-    print("✅ Tạo tài khoản thành công!\n")
-
-def gui_tien():
-    global balance
-    try:
-        amount = float(input("Nhập số tiền cần gửi: "))
-        if amount <= 0:
-            print("❌ Số tiền không hợp lệ")
-            return
-        balance += amount
-        transactions.append(f"Gửi tiền: +{amount}")
-        print("✅ Gửi tiền thành công!")
-    except ValueError:
-        print("❌ Vui lòng nhập số")
-
-def rut_tien():
-    global balance
-    try:
-        amount = float(input("Nhập số tiền cần rút: "))
-        if amount <= 0:
-            print("❌ Số tiền không hợp lệ")
-        elif amount > balance:
-            print("❌ Số dư không đủ")
+    def deposit(self, amount):
+        if amount > 0:
+            self.balance += amount
+            self.transactions.append(f"Deposit: +{amount}")
+            print("✅ Deposit successful!")
         else:
-            balance -= amount
-            transactions.append(f"Rút tiền: -{amount}")
-            print("✅ Rút tiền thành công!")
-    except ValueError:
-        print("❌ Vui lòng nhập số")
+            print("❌ Invalid amount!")
 
-def xem_so_du():
-    print(f"💰 Số dư hiện tại: {balance}")
-
-def xem_lich_su():
-    if not transactions:
-        print("📭 Chưa có giao dịch nào")
-    else:
-        print("📜 Lịch sử giao dịch:")
-        for i, t in enumerate(transactions, 1):
-            print(f"{i}. {t}")
-
-# ---------- Menu giao dịch ----------
-def menu_giao_dich():
-    while True:
-        print("""
---- MENU GIAO DỊCH ---
-a. Gửi tiền
-b. Rút tiền
-c. Xem số dư
-d. Xem lịch sử giao dịch
-e. Quay về menu chính
-""")
-        choice = input("Chọn chức năng: ").lower()
-
-        if choice == "a":
-            gui_tien()
-        elif choice == "b":
-            rut_tien()
-        elif choice == "c":
-            xem_so_du()
-        elif choice == "d":
-            xem_lich_su()
-        elif choice == "e":
-            break
+    def withdraw(self, amount):
+        if amount > self.balance:
+            print("❌ Insufficient balance!")
+        elif amount <= 0:
+            print("❌ Invalid amount!")
         else:
-            print("❌ Lựa chọn không hợp lệ")
+            self.balance -= amount
+            self.transactions.append(f"Withdraw: -{amount}")
+            print("✅ Withdraw successful!")
 
-# ---------- Menu chính ----------
-def menu_chinh():
+    def view_balance(self):
+        print(f"💰 Current balance: {self.balance}")
+
+    def view_transactions(self):
+        if not self.transactions:
+            print("📭 No transactions yet.")
+        else:
+            print("📜 Transaction History:")
+            for t in self.transactions:
+                print("-", t)
+
+class VIPAccount(Account):
+    def __init__(self, name, balance):
+        super().__init__(name, balance)
+        self.points = 0
+        self.amount_per_transaction = []
+
+    def deposit(self, amount):
+        super().deposit(amount)
+        self.points += int(amount // 100)
+        self.amount_per_transaction.append(amount)
+
+    def withdraw(self, amount):
+        super().withdraw(amount)
+        self.points += int(amount // 100)
+        self.amount_per_transaction.append(amount)
+
+    def receive_ads(self):
+        print("📢 VIP Promotion: Get 2x points on deposits today!")
+
+    def redeem_points(self):
+        if self.points >= 10:
+            self.points -= 10
+            self.balance += 50
+            print("🎁 Redeemed 10 points for 50 balance!")
+        else:
+            print("❌ Not enough points!")
+
+    def view_transactions(self):
+        print("🌟 VIP TRANSACTION HISTORY 🌟")
+        super().view_transactions()
+        print(f"⭐ Reward points: {self.points}")
+
+def transaction_menu(account):
     while True:
-        print("""
-=== ATM SYSTEM ===
-1. Tạo tài khoản
-2. Giao dịch
-3. Kết thúc
-""")
-        choice = input("Chọn chức năng: ")
+        print("\n--- TRANSACTION MENU ---")
+        print("1. Deposit")
+        print("2. Withdraw")
+        print("3. View transaction history")
+
+        if isinstance(account, VIPAccount):
+            print("4. Redeem reward points")
+            print("5. Back to main menu")
+        else:
+            print("4. Back to main menu")
+
+        choice = input("Choose an option: ")
 
         if choice == "1":
-            tao_tai_khoan()
+            amount = float(input("Enter deposit amount: "))
+            account.deposit(amount)
+
         elif choice == "2":
-            if account_name == "":
-                print("❌ Vui lòng tạo tài khoản trước")
-            else:
-                menu_giao_dich()
+            amount = float(input("Enter withdraw amount: "))
+            account.withdraw(amount)
+
         elif choice == "3":
-            print("👋 Cảm ơn đã sử dụng ATM!")
+            account.view_transactions()
+
+        elif choice == "4" and isinstance(account, VIPAccount):
+            account.redeem_points()
+
+        elif choice in ["4", "5"]:
             break
         else:
-            print("❌ Lựa chọn không hợp lệ")
+            print("❌ Invalid choice!")
 
-# ---------- Chạy chương trình ----------
-menu_chinh()
+def main():
+    print("🏧 WELCOME TO ATM SYSTEM")
+
+    name = input("Enter account holder's name: ")
+    balance = float(input("Enter initial balance: "))
+
+    acc_type = input("Choose account type (1. Normal / 2. VIP): ")
+
+    if acc_type == "2":
+        account = VIPAccount(name, balance)
+        account.receive_ads()
+    else:
+        account = Account(name, balance)
+
+    while True:
+        print("\n--- MAIN MENU ---")
+        print("1. Account information")
+        print("2. Transactions")
+        print("3. Exit")
+
+        choice = input("Choose an option: ")
+
+        if choice == "1":
+            print(f"👤 Name: {account.name}")
+            account.view_balance()
+
+        elif choice == "2":
+            transaction_menu(account)
+
+        elif choice == "3":
+            print("👋 Thank you for using ATM System!")
+            break
+
+        else:
+            print("❌ Invalid choice!")
